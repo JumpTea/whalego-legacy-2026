@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">鲸驱</string>
+    <string name="accessibility_label">鲸驱 · 广告跳过</string>
+    <string name="accessibility_description">鲸驱只在本机识别广告页里的「跳过 / 关闭广告」按钮并代为点击。不读取输入内容，不截图，不上传数据。</string>
+</resources>

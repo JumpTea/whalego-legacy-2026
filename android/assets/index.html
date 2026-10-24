@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#DDEBFF">
+<title>鲸驱</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-bg="default" data-page="home">
+
+<div id="splash" aria-hidden="true">
+  <img src="splash-tail.gif" alt="" draggable="false">
+</div>
+
+<div id="bg" aria-hidden="true">
+  <img id="wallA" alt="" draggable="false">
+  <img id="wallB" alt="" draggable="false">
+  <div id="veil"></div>
+</div>
+
+<div id="pages">
+  <section id="settings" class="page" aria-hidden="true">
+    <div class="settings-grid">
+      <button class="ring-btn" id="openLibrary" aria-label="皮肤库">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 4.2a2.7 2.7 0 1 1 2.7 2.7c-.95 0-1.7.55-1.7 1.5v1.3"/>
+          <path d="m12 10.6 8.5 5.9a1.35 1.35 0 0 1-.77 2.45H4.27a1.35 1.35 0 0 1-.77-2.45z"/>
+        </svg>
+      </button>
+      <button class="ring-btn" id="syncHome" aria-label="同步至桌面">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/>
+          <path d="M17.2 16.4v3.4M15.5 18.1h3.4"/>
+        </svg>
+      </button>
+      <button class="ring-btn" id="syncLock" aria-label="同步至锁屏">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="5" y="10" width="14" height="10.5" rx="2.2"/>
+          <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+          <path d="M17.2 14.6v3.2M15.6 16.2h3.2"/>
+        </svg>
+      </button>
+      <button class="ring-btn" id="openGithub" aria-label="GitHub 公开仓库">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.25 3.33.95.1-.74.4-1.25.72-1.54-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.47.11-3.06 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.19-1.49 3.15-1.18 3.15-1.18.62 1.59.23 2.77.11 3.06.73.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.39-5.25 5.68.41.35.77 1.05.77 2.12 0 1.53-.01 2.76-.01 3.14 0 .31.21.67.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/>
+        </svg>
+      </button>
+    </div>
+    <p id="author">Softea</p>
+  </section>
+
+  <section id="home" class="page" aria-hidden="false">
+    <p id="study">仅供学习使用</p>
+    <button id="start" aria-label="开始">
+      <span class="tri" aria-hidden="true"></span>
+    </button>
+    <div id="tailBadge" aria-hidden="true"></div>
+  </section>
+</div>
+
+<nav id="nav" aria-label="页面">
+  <button id="navHome" class="nav-btn" aria-label="主页" aria-current="page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/>
+    </svg>
+  </button>
+  <button id="navSettings" class="nav-btn" aria-label="设置">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 13.1a7.8 7.8 0 0 0 0-2.2l1.9-1.4-2-3.4-2.2.9a7.6 7.6 0 0 0-1.9-1.1L14.8 3h-4l-.4 2.9a7.6 7.6 0 0 0-1.9 1.1l-2.2-.9-2 3.4 1.9 1.4a7.8 7.8 0 0 0 0 2.2l-1.9 1.4 2 3.4 2.2-.9a7.6 7.6 0 0 0 1.9 1.1l.4 2.9h4l.4-2.9a7.6 7.6 0 0 0 1.9-1.1l2.2.9 2-3.4z"/>
+    </svg>
+  </button>
+</nav>
+
+<div id="loading" aria-hidden="true"><div id="bar"><span id="barFill"></span></div></div>
+
+<div id="sheetBackdrop" aria-hidden="true"></div>
+<section id="sheet" role="dialog" aria-modal="true" aria-label="皮肤库" aria-hidden="true">
+  <div class="modes" role="group" aria-label="背景">
+    <button class="mode" data-mode="default" aria-label="默认背景" aria-pressed="true"><span class="sw sw-default"></span></button>
+    <button class="mode" data-mode="white" aria-label="白色背景" aria-pressed="false"><span class="sw sw-white"></span></button>
+    <button class="mode" data-mode="black" aria-label="黑色背景" aria-pressed="false"><span class="sw sw-black"></span></button>
+    <button class="mode" data-mode="system" aria-label="跟随系统" aria-pressed="false"><span class="sw sw-system"></span></button>
+    <button class="mode" data-mode="off" aria-label="关闭背景" aria-pressed="false"><span class="sw sw-off"></span></button>
+  </div>
+  <div id="wallGrid"></div>
+</section>
+
+<div id="dialogBackdrop" aria-hidden="true"></div>
+<div id="a11yDialog" role="dialog" aria-modal="true" aria-labelledby="a11yTitle" aria-hidden="true">
+  <p id="a11yTitle">请开启无障碍服务</p>
+  <div class="dialog-actions">
+    <button id="go" class="dialog-btn primary">走起</button>
+    <button id="leave" class="dialog-btn">出走</button>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="wallpapers.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

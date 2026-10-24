@@ -1,0 +1,10 @@
+# build output and local-only files
+.signing/
+build/
+dist/
+materials/
+qa/
+node_modules/
+*.keystore
+*.jks
+local.properties
