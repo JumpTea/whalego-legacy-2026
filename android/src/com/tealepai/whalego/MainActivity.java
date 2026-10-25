@@ -37,7 +37,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainActivity extends Activity {
     private static final String APP_HOST = "whalego.local";
@@ -48,7 +47,6 @@ public class MainActivity extends Activity {
     private int bottomInset;
     private boolean lastSystemDark;
     private final ExecutorService wallpaperExecutor = Executors.newSingleThreadExecutor();
-    private final AtomicBoolean wallpaperBusy = new AtomicBoolean(false);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -383,11 +381,6 @@ public class MainActivity extends Activity {
                 runJs("window.whaleSyncResult&&window.whaleSyncResult(false,'bad asset')");
                 return;
             }
-            if (!wallpaperBusy.compareAndSet(false, true)) {
-                // 上一次还在写入；回一个 busy，让 JS 解锁按钮
-                runJs("window.whaleSyncResult&&window.whaleSyncResult(false,'busy')");
-                return;
-            }
             wallpaperExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -429,7 +422,6 @@ public class MainActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            wallpaperBusy.set(false);
                             if (web == null) return;
                             web.evaluateJavascript(
                                     "window.whaleSyncResult&&window.whaleSyncResult("

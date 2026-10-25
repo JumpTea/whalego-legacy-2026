@@ -112,25 +112,6 @@ button:focus-visible {
   opacity: 1;
 }
 
-/* 默认壁纸用整幅插画，不裁切；上下留白由同一张图的模糊版本填满 */
-#bg #wallBlur {
-  inset: -44px;
-  width: calc(100% + 88px);
-  height: calc(100% + 88px);
-  object-fit: cover;
-  filter: blur(28px) saturate(1.08) brightness(1.03);
-  opacity: 0;
-}
-
-#bg #wallBlur.is-on {
-  opacity: 1;
-}
-
-body[data-wall="00"] #bg #wallA,
-body[data-wall="00"] #bg #wallB {
-  object-fit: contain;
-}
-
 #veil {
   position: absolute;
   inset: 0;
@@ -277,51 +258,6 @@ body[data-bg="system"][data-theme="dark"] #veil { background: rgba(0, 0, 0, .34)
   100% { transform: scale(.38) translate3d(8px, 14px, 0); opacity: 0; }
 }
 
-#tailBadge {
-  position: absolute;
-  right: 22px;
-  bottom: calc(70px + var(--nav-h) + var(--safe-bottom));
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--chip-bg);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 2px 6px rgba(21, 36, 59, .10), 0 16px 36px rgba(21, 36, 59, .10);
-  display: grid;
-  place-items: center;
-  opacity: 0;
-  transform: scale(.55);
-  transition: opacity .22s ease, transform .26s var(--ease-out);
-  pointer-events: none;
-  z-index: 2;
-}
-
-#tailBadge.is-on {
-  opacity: 1;
-  transform: scale(1);
-}
-
-#tailBadge::after {
-  content: "";
-  width: 44px;
-  height: 44px;
-  background: url("tail-sprite-blue.png") 0 0 / 3600% 100% no-repeat;
-}
-
-#tailBadge.is-on::after {
-  animation: tail-run .72s steps(36) infinite;
-}
-
-body[data-theme="dark"] #tailBadge::after {
-  background-image: url("tail-sprite-white.png");
-}
-
-@keyframes tail-run {
-  from { background-position: 0 0; }
-  to { background-position: -1584px 0; }
-}
-
 /* ---------- bottom nav ---------- */
 
 #nav {
@@ -353,55 +289,79 @@ body[data-theme="dark"] #tailBadge::after {
 .nav-btn:active { transform: scale(.9); }
 .nav-btn[aria-current="page"] { color: var(--brand); }
 
-/* ---------- loading bar ---------- */
+/* ---------- loading bar + deploy whale ---------- */
 
 #loading {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
+  inset: 0;
   z-index: 20;
   pointer-events: none;
 }
 
 #bar {
-  position: absolute;
+  position: fixed;
   left: 50%;
-  bottom: 0;
-  width: min(84vw, 560px);
+  bottom: calc(70px + var(--nav-h) + var(--safe-bottom) + 26px);
+  width: 0;
   height: 3px;
   transform: translateX(-50%);
-  background: var(--bar-bg);
-  border-radius: 3px 3px 0 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: opacity .18s ease .05s;
-}
-
-body.is-loading #bar { opacity: 1; }
-
-#barFill {
-  display: block;
-  width: 100%;
-  height: 100%;
+  border-radius: 3px;
   background: var(--bar-fill);
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform .78s cubic-bezier(.3, .85, .35, 1);
+  opacity: 0;
+  transition: width .78s cubic-bezier(.22, .8, .2, 1), opacity .16s ease;
 }
 
-body.is-loading #barFill { transform: scaleX(1); }
+body.is-loading #bar {
+  width: min(72vw, 380px);
+  opacity: 1;
+}
 
 body.is-collapsing #bar {
-  opacity: 0;
-  transition: opacity .18s ease .18s;
+  width: 0;
+  opacity: 1;
+  transition: width .24s cubic-bezier(.4, 0, .8, .2);
 }
 
-body.is-collapsing #barFill {
-  transform: scaleX(0);
-  transform-origin: center center;
-  transition: transform .26s var(--ease-in);
+#deployWhale {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 260px;
+  max-width: calc(100vw - 24px);
+  height: auto;
+  transform: translate(-50%, -50%) scale(.82);
+  opacity: 0;
+  image-rendering: pixelated;
+  transition: opacity .28s ease, transform .38s cubic-bezier(.2, .9, .25, 1);
+}
+
+body.is-deployed #deployWhale {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+#deployMsg {
+  position: fixed;
+  left: 50%;
+  bottom: calc(70px + var(--nav-h) + var(--safe-bottom) + 46px);
+  transform: translate(-50%, 8px);
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(21, 36, 59, .88);
+  color: #F5F8FF;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition: opacity .24s ease, transform .32s var(--ease-out);
+}
+
+body.is-message #deployMsg {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 /* ---------- sheet ---------- */
@@ -641,9 +601,8 @@ body[data-theme="dark"] .dialog-btn.primary {
   .settings-grid { grid-template-columns: repeat(2, 50px); gap: 20px; }
   .ring-btn { width: 50px; height: 50px; }
   .ring-btn svg { width: 22px; height: 22px; }
-  #start, #tailBadge { width: 52px; height: 52px; right: 18px; }
+  #start { width: 52px; height: 52px; right: 18px; }
   #start .tri { border-width: 7px 0 7px 12px; }
-  #tailBadge::after { width: 40px; height: 40px; background-size: 3600% 100%; }
 }
 
 @media (max-height: 620px) {
@@ -653,7 +612,7 @@ body[data-theme="dark"] .dialog-btn.primary {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #splash, #pages, #sheet, #a11yDialog, #bg img, #veil, #start, #tailBadge, #bar, #barFill, #toast {
+  #splash, #pages, #sheet, #a11yDialog, #bg img, #veil, #start, #bar, #deployWhale, #deployMsg, #toast {
     transition-duration: .01ms !important;
     animation-duration: .01ms !important;
   }

@@ -9,6 +9,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityWindowInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,9 +91,24 @@ public class AdAccessibilityService extends AccessibilityService {
         eventsSeen++;
         lastPackage = packageName;
 
-        AccessibilityNodeInfo root = getRootInActiveWindow();
-        if (root == null) return;
-        if (scan(root, 0, new int[]{0})) {
+        boolean handled = false;
+        // 弹窗 / 广告 SDK 有时不在 active window 的根节点下，逐个窗口找一遍。
+        java.util.List<AccessibilityWindowInfo> windows = getWindows();
+        if (windows != null && !windows.isEmpty()) {
+            for (AccessibilityWindowInfo window : windows) {
+                if (window == null) continue;
+                AccessibilityNodeInfo root = window.getRoot();
+                if (root != null && scan(root, 0, new int[]{0})) {
+                    handled = true;
+                    break;
+                }
+            }
+        }
+        if (!handled) {
+            AccessibilityNodeInfo root = getRootInActiveWindow();
+            if (root != null) handled = scan(root, 0, new int[]{0});
+        }
+        if (handled) {
             lastClickAt = now;
             Log.i(TAG, "ad close control handled");
         }

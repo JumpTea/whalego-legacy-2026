@@ -37,14 +37,12 @@
   WALLS.forEach((w) => { if (w && w.id && !WALL_BY_ID.has(w.id)) WALL_BY_ID.set(w.id, w); });
 
   const splash = $('splash');
-  const wallBlur = $('wallBlur');
   const wallA = $('wallA');
   const wallB = $('wallB');
   const pages = $('pages');
   const settingsPage = $('settings');
   const homePage = $('home');
   const startBtn = $('start');
-  const tailBadge = $('tailBadge');
   const navHome = $('navHome');
   const navSettings = $('navSettings');
   const sheet = $('sheet');
@@ -140,10 +138,6 @@
 
   function applyWallMeta(wp) {
     document.body.dataset.wall = wp && wp.id ? wp.id : '00';
-    if (wallBlur) {
-      wallBlur.src = assetUrl(wp.src);
-      wallBlur.classList.toggle('is-on', wp.id === '00');
-    }
   }
 
   function initWallpaper() {
@@ -286,12 +280,7 @@
   }
 
   const CLEAR_PROPS = ['--btn-bg', '--btn-fg', '--nav-ink', '--label-ink', '--author-ink',
-    '--bar-bg', '--bar-fill', '--wall-top', '--wall-bottom'];
-
-  function toHex(rgb) {
-    return '#' + rgb.map((v) => Math.max(0, Math.min(255, Math.round(v)))
-      .toString(16).padStart(2, '0')).join('');
-  }
+    '--bar-bg', '--bar-fill'];
 
   function clearPalette() {
     CLEAR_PROPS.forEach((prop) => document.body.style.removeProperty(prop));
@@ -362,9 +351,6 @@
     document.body.style.setProperty('--author-ink', authorInk);
     document.body.style.setProperty('--bar-bg', barLight ? 'rgba(21, 36, 59, .16)' : 'rgba(255, 255, 255, .24)');
     document.body.style.setProperty('--bar-fill', barLight ? '#4D6BFE' : '#F5F8FF');
-    // 默认壁纸用 contain 完整显示，上下留白用原图上下边缘的颜色填充
-    document.body.style.setProperty('--wall-top', toHex(rawSample(0.5, 0.004)));
-    document.body.style.setProperty('--wall-bottom', toHex(rawSample(0.5, 0.996)));
   }
 
   function samplePalette() {
@@ -450,7 +436,7 @@
       drag.axis = 'x';
     }
 
-    let move = dx;
+    let move = -dx;
     if (state.page === 'home' && move < 0) move *= 0.22;
     if (state.page === 'settings' && move > 0) move *= 0.22;
     drag.dx = move;
@@ -494,20 +480,33 @@
 
     setTimeout(() => {
       if (!state.loading) return;
-      tailBadge.classList.add('is-on');
       document.body.classList.add('is-loading');
-    }, 170);
-
-    setTimeout(() => { document.body.classList.add('is-collapsing'); }, 1010);
-    setTimeout(() => { tailBadge.classList.remove('is-on'); }, 1080);
+    }, 120);
 
     setTimeout(() => {
+      if (!state.loading) return;
+      document.body.classList.add('is-collapsing');
+    }, 1100);
+
+    setTimeout(() => {
+      if (!state.loading) return;
       document.body.classList.remove('is-loading');
       document.body.classList.remove('is-collapsing');
+      document.body.classList.add('is-deployed');
+    }, 1400);
+
+    setTimeout(() => {
+      if (!state.loading) return;
+      document.body.classList.add('is-message');
+    }, 1650);
+
+    setTimeout(() => {
+      document.body.classList.remove('is-deployed');
+      document.body.classList.remove('is-message');
       startBtn.classList.remove('is-out');
       startBtn.removeAttribute('aria-disabled');
       state.loading = false;
-    }, 1320);
+    }, 2900);
   }
 
   /* ---------- sheet ---------- */

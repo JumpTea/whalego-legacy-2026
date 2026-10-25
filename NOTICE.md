@@ -15,7 +15,7 @@
 
 ## 图像与角色素材
 
-- `android/assets/splash-tail.gif`、`android/assets/tail-sprite-blue.png`、`android/assets/tail-sprite-white.png`、`android/res/drawable-nodpi/splash_tail_static.png`、`android/res/mipmap-*/ic_launcher_foreground.png`、`android/assets/w00.jpg` 由项目作者提供的原始图片加工而来，仅用于本项目的个人学习构建。版权归原作者所有，**不在 MIT 许可范围内**。
+- `android/assets/splash-tail.gif`、`android/assets/tail-sprite-blue.png`、`android/assets/tail-sprite-white.png`、`android/assets/deploy-whale.png`、`android/res/drawable-nodpi/splash_tail_static.png`、`android/res/mipmap-*/ic_launcher_foreground.png`、`android/assets/w00.jpg` 由项目作者提供的原始图片加工而来，仅用于本项目的个人学习构建。版权归原作者所有，**不在 MIT 许可范围内**。
 - 其余壁纸来自三个公开图站，逐条来源见 [CREDITS.md](CREDITS.md)。版权归各自作者所有，**不在 MIT 许可范围内**。本项目只做格式转换与尺寸适配，不声明任何所有权。
 - 如果你是权利人且不希望自己的作品出现在这里，请开 issue 说明文件与诉求，对应文件会被移除。
 

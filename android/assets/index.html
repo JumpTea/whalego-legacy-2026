@@ -15,7 +15,6 @@
 </div>
 
 <div id="bg" aria-hidden="true">
-  <img id="wallBlur" alt="" draggable="false">
   <img id="wallA" alt="" draggable="false">
   <img id="wallB" alt="" draggable="false">
   <div id="veil"></div>
@@ -57,7 +56,6 @@
     <button id="start" aria-label="开始">
       <span class="tri" aria-hidden="true"></span>
     </button>
-    <div id="tailBadge" aria-hidden="true"></div>
   </section>
 </div>
 
@@ -75,7 +73,11 @@
   </button>
 </nav>
 
-<div id="loading" aria-hidden="true"><div id="bar"><span id="barFill"></span></div></div>
+<div id="loading" aria-hidden="true">
+  <div id="bar"></div>
+  <img id="deployWhale" src="deploy-whale.png" alt="" draggable="false">
+  <p id="deployMsg" role="status" aria-live="polite">已部署广告驱逐鲸</p>
+</div>
 
 <div id="sheetBackdrop" aria-hidden="true"></div>
 <section id="sheet" role="dialog" aria-modal="true" aria-label="皮肤库" aria-hidden="true">
