@@ -37,6 +37,7 @@
   WALLS.forEach((w) => { if (w && w.id && !WALL_BY_ID.has(w.id)) WALL_BY_ID.set(w.id, w); });
 
   const splash = $('splash');
+  const wallBlur = $('wallBlur');
   const wallA = $('wallA');
   const wallB = $('wallB');
   const pages = $('pages');
@@ -70,6 +71,9 @@
   let wallToken = 0;
   let paletteToken = 0;
   let toastTimer = 0;
+  let syncing = false;
+  let lastSyncTarget = 1;
+  let syncTimer = 0;
 
   /* ---------- prefs ---------- */
 
@@ -134,8 +138,17 @@
 
   /* ---------- wallpaper ---------- */
 
+  function applyWallMeta(wp) {
+    document.body.dataset.wall = wp && wp.id ? wp.id : '00';
+    if (wallBlur) {
+      wallBlur.src = assetUrl(wp.src);
+      wallBlur.classList.toggle('is-on', wp.id === '00');
+    }
+  }
+
   function initWallpaper() {
     const wp = currentWallpaper();
+    applyWallMeta(wp);
     wallA.onload = null;
     wallB.onload = null;
     wallA.onerror = () => {
@@ -156,6 +169,7 @@
     const wp = WALL_BY_ID.get(id) || WALL_BY_ID.get('00');
     if (!wp) return;
     prefs.wallpaper = wp.id;
+    applyWallMeta(wp);
 
     const activeIsA = state.slot === 0;
     const incoming = activeIsA ? wallB : wallA;
@@ -271,7 +285,13 @@
     return rgb.map((v, i) => Math.round(v * (1 - a) + veil[i] * a));
   }
 
-  const CLEAR_PROPS = ['--btn-bg', '--btn-fg', '--nav-ink', '--label-ink', '--author-ink', '--bar-bg', '--bar-fill'];
+  const CLEAR_PROPS = ['--btn-bg', '--btn-fg', '--nav-ink', '--label-ink', '--author-ink',
+    '--bar-bg', '--bar-fill', '--wall-top', '--wall-bottom'];
+
+  function toHex(rgb) {
+    return '#' + rgb.map((v) => Math.max(0, Math.min(255, Math.round(v)))
+      .toString(16).padStart(2, '0')).join('');
+  }
 
   function clearPalette() {
     CLEAR_PROPS.forEach((prop) => document.body.style.removeProperty(prop));
@@ -296,12 +316,13 @@
     ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
 
     const veil = veilColor();
-    const sample = (fx, fy) => {
+    const rawSample = (fx, fy) => {
       const x = Math.min(W - 1, Math.max(0, Math.round(fx * (W - 1))));
       const y = Math.min(H - 1, Math.max(0, Math.round(fy * (H - 1))));
       const d = ctx.getImageData(x, y, 1, 1).data;
-      return blend([d[0], d[1], d[2]], veil);
+      return [d[0], d[1], d[2]];
     };
+    const sample = (fx, fy) => blend(rawSample(fx, fy), veil);
 
     const button = sample(0.87, 0.86);
     const navLeft = sample(0.42, 0.966);
@@ -341,6 +362,9 @@
     document.body.style.setProperty('--author-ink', authorInk);
     document.body.style.setProperty('--bar-bg', barLight ? 'rgba(21, 36, 59, .16)' : 'rgba(255, 255, 255, .24)');
     document.body.style.setProperty('--bar-fill', barLight ? '#4D6BFE' : '#F5F8FF');
+    // 默认壁纸用 contain 完整显示，上下留白用原图上下边缘的颜色填充
+    document.body.style.setProperty('--wall-top', toHex(rawSample(0.5, 0.004)));
+    document.body.style.setProperty('--wall-bottom', toHex(rawSample(0.5, 0.996)));
   }
 
   function samplePalette() {
@@ -535,11 +559,25 @@
   /* ---------- sync ---------- */
 
   function syncWallpaper(target) {
+    if (syncing) {
+      showToast('正在设置，稍等一下');
+      return;
+    }
     const wp = currentWallpaper();
+    syncing = true;
+    lastSyncTarget = target;
+    clearTimeout(syncTimer);
+    showToast(target === 2 ? '正在设置锁屏…' : '正在设置桌面…');
+    syncTimer = setTimeout(() => {
+      if (!syncing) return;
+      syncing = false;
+      showToast('没换成，再试一次');
+    }, 9000);
     callNative('setWallpaper', () => {
-      setTimeout(() => {
-        if (typeof window.whaleSyncResult === 'function') window.whaleSyncResult(false, 'unsupported');
-      }, 120);
+      clearTimeout(syncTimer);
+      if (!syncing) return;
+      syncing = false;
+      showToast('浏览器预览不支持设置壁纸');
     }, wp.src, target);
   }
 
@@ -600,9 +638,18 @@
   };
 
   window.whaleSyncResult = function (ok, message) {
+    clearTimeout(syncTimer);
+    syncing = false;
     const success = ok === true || ok === 'true' || ok === 1 || ok === '1';
-    if (!success) showToast('没换成，再试一次');
-    else if (typeof message === 'string' && /fail|error/i.test(message)) showToast('没换成，再试一次');
+    if (!success) {
+      showToast('没换成，再试一次');
+      return;
+    }
+    if (typeof message === 'string' && /fail|error/i.test(message)) {
+      showToast('没换成，再试一次');
+      return;
+    }
+    showToast(lastSyncTarget === 2 ? '已设为锁屏壁纸' : '已设为桌面壁纸');
   };
 
   /* ---------- events ---------- */
@@ -737,10 +784,13 @@
     }
     const wp = currentWallpaper();
     const failed = (window.__imgErrors || []).join('\n  ');
+    const a11y = callNative('accessibilityDebug', '');
     const lines = [
       'UA: ' + navigator.userAgent,
       'URL: ' + location.href,
       'WALLS: ' + WALLS.length,
+      'wall: ' + wp.id + ' / body=' + document.body.dataset.wall,
+      'a11y: ' + (a11y || '-'),
       'current: ' + wp.src + ' / ' + wp.thumb,
       'wallA: ' + (wallA.getAttribute('src') || '-') + ' complete=' + wallA.complete
         + ' w=' + wallA.naturalWidth,

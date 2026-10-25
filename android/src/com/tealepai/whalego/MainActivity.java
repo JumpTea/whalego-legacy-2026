@@ -35,6 +35,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainActivity extends Activity {
     private static final String APP_HOST = "whalego.local";
@@ -44,6 +47,8 @@ public class MainActivity extends Activity {
     private SharedPreferences prefs;
     private int bottomInset;
     private boolean lastSystemDark;
+    private final ExecutorService wallpaperExecutor = Executors.newSingleThreadExecutor();
+    private final AtomicBoolean wallpaperBusy = new AtomicBoolean(false);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -213,6 +218,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        wallpaperExecutor.shutdownNow();
         if (web != null) {
             web.removeJavascriptInterface("whale");
             web.destroy();
@@ -366,49 +372,64 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public String accessibilityDebug() {
+            // 只读计数，不含输入内容；给应用内 5 连点诊断面板用
+            return AdAccessibilityService.debugSnapshot();
+        }
+
+        @JavascriptInterface
         public void setWallpaper(final String asset, final int target) {
-            new Thread(new Runnable() {
+            if (asset == null || !asset.matches("[A-Za-z0-9_-]{1,64}\\.jpg")) {
+                runJs("window.whaleSyncResult&&window.whaleSyncResult(false,'bad asset')");
+                return;
+            }
+            if (!wallpaperBusy.compareAndSet(false, true)) {
+                // 上一次还在写入；回一个 busy，让 JS 解锁按钮
+                runJs("window.whaleSyncResult&&window.whaleSyncResult(false,'busy')");
+                return;
+            }
+            wallpaperExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
                     boolean ok = false;
                     String message = "";
-                    InputStream in = null;
                     try {
-                        if (asset == null || !asset.matches("[A-Za-z0-9_-]{1,64}\\.jpg")) {
-                            throw new IllegalArgumentException("bad asset");
-                        }
                         WallpaperManager manager =
                                 WallpaperManager.getInstance(getApplicationContext());
-                        if (Build.VERSION.SDK_INT >= 23 && !manager.isWallpaperSupported()) {
+                        if (!manager.isWallpaperSupported()) {
                             throw new IllegalStateException("unsupported");
                         }
-                        if (Build.VERSION.SDK_INT >= 24 && !manager.isSetWallpaperAllowed()) {
+                        if (!manager.isSetWallpaperAllowed()) {
                             throw new IllegalStateException("blocked");
                         }
-                        in = getAssets().open(asset);
-                        if (Build.VERSION.SDK_INT >= 24) {
+                        InputStream in = getAssets().open(asset);
+                        try {
                             int which = target == 2
                                     ? WallpaperManager.FLAG_LOCK : WallpaperManager.FLAG_SYSTEM;
                             manager.setStream(in, null, true, which);
-                        } else {
-                            manager.setStream(in);
-                        }
-                        ok = true;
-                    } catch (Throwable t) {
-                        message = t.getClass().getSimpleName();
-                    } finally {
-                        if (in != null) {
+                        } finally {
                             try {
                                 in.close();
                             } catch (Exception ignored) {
                             }
                         }
+                        try {
+                            if (Build.VERSION.SDK_INT >= 24) {
+                                manager.forgetLoadedWallpaper();
+                            }
+                        } catch (Throwable ignored) {
+                            // 刷新缓存失败不影响已经写入的壁纸
+                        }
+                        ok = true;
+                    } catch (Throwable t) {
+                        message = t.getClass().getSimpleName();
                     }
                     final boolean success = ok;
                     final String note = message;
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            wallpaperBusy.set(false);
                             if (web == null) return;
                             web.evaluateJavascript(
                                     "window.whaleSyncResult&&window.whaleSyncResult("
@@ -417,7 +438,7 @@ public class MainActivity extends Activity {
                         }
                     });
                 }
-            }, "wallpaper-sync").start();
+            });
         }
     }
 }

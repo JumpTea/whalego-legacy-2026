@@ -11,17 +11,17 @@
 
 ## 功能
 
-- **无障碍跳过广告**：识别「跳过 / 跳过广告 / 关闭广告 / skip / close / ×」以及「35 | 跳过」这类倒计时按钮，350 ms 节流，只点一次。
+- **无障碍跳过广告**：识别「跳过 / 跳过广告 / 关闭广告 / skip / close / ×」以及「35 | 跳过」这类倒计时按钮；先 `ACTION_CLICK`，无效时在按钮中心补一次无障碍手势。节点文字被拆成「跳」「过」也能拼起来判断。
 - **61 张壁纸**：1 张默认 + 3 个公开图站各 20 张，三列网格选择。
 - **5 种背景**：默认渐变、白色、黑色、跟随系统、关闭。
-- **同步壁纸**：一键设为桌面或锁屏，失败只提示「没换成，再试一次」。
+- **同步壁纸**：一键设为桌面或锁屏；单线程串行写入，成功 / 失败都有提示，连续点击不会把系统队列打满。
 - **两页结构**：主页固定不可上下滑，右滑进设置；底部房子 / 齿轮切换。
 - **纯图标设置**：皮肤库、同步桌面、同步锁屏、GitHub，四个圆钮，没有多余文字。
 - **首次启动引导**：说明为什么要开无障碍，点「走起」直达系统设置，点「出走」退出。
 
 ## 安装
 
-从 [Releases](https://github.com/JumpTea/whalego/releases/latest) 下载 `whalego-0.2.1.apk`（minSdk 26 / targetSdk 35）。
+从 [Releases](https://github.com/JumpTea/whalego/releases/latest) 下载 `whalego-0.2.2.apk`（minSdk 26 / targetSdk 35）。
 
 1. 安装并打开，按弹窗点「走起」。
 2. 在系统的无障碍设置里启用「鲸驱 · 广告跳过」。
@@ -57,7 +57,8 @@ android/                 Android 工程（无 Gradle）
   AndroidManifest.xml
   src/com/tealepai/whalego/
     MainActivity.java          单 Activity + WebView + 原生桥
-    AdAccessibilityService.java 无障碍服务
+    AdAccessibilityService.java 无障碍服务（遍历 + 手势点击）
+    AdRules.java               纯 Java 的跳过标签判断（可单测）
   assets/               index.html / style.css / app.js / 壁纸 / 开屏图
   res/                  图标、主题、文案
 tools/build-apk.mjs     手工构建脚本
@@ -79,6 +80,15 @@ version.properties
 - 能否跳过取决于目标 App 是否把按钮暴露给无障碍服务。WebView、自绘控件、游戏引擎里的广告可能识别不到。
 - 部分系统会限制第三方应用设置锁屏壁纸；失败时会提示，不会静默失败。
 - 界面在浏览器层按 390×844 / 360×800 / 320×568 三档验证过；原生部分（系统开屏、无障碍服务、壁纸同步、返回键）尚未在真机或模拟器上验证。
+
+## 参考与致谢
+
+广告跳过的判断策略参考了这两个 MIT 项目，但没有直接复制它们的源文件：
+
+- [zfdang/Android-Touch-Helper](https://github.com/zfdang/Android-Touch-Helper)：`flagIncludeNotImportantViews`、可点击祖先、`performAction` 无效后用 `dispatchGesture` 补点。
+- [madeye/ad-skipper](https://github.com/madeye/ad-skipper)：无障碍节点遍历与广告上下文的分层判断思路。
+
+对应 MIT 许可见 [NOTICE.md](NOTICE.md)。如果你要再分发，请同时保留这两份项目的版权与许可声明。
 
 ## 素材与许可
 

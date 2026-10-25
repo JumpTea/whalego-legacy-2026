@@ -16,6 +16,8 @@
   --bar-bg: rgba(21, 36, 59, .16);
   --bar-fill: #4D6BFE;
   --chip-bg: rgba(245, 248, 255, .78);
+  --wall-top: #DDEBFF;
+  --wall-bottom: #DDEBFF;
 }
 
 * {
@@ -92,7 +94,7 @@ button:focus-visible {
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: #DDEBFF;
+  background: linear-gradient(180deg, var(--wall-top), var(--wall-bottom));
 }
 
 #bg img {
@@ -108,6 +110,25 @@ button:focus-visible {
 
 #bg img.is-on {
   opacity: 1;
+}
+
+/* 默认壁纸用整幅插画，不裁切；上下留白由同一张图的模糊版本填满 */
+#bg #wallBlur {
+  inset: -44px;
+  width: calc(100% + 88px);
+  height: calc(100% + 88px);
+  object-fit: cover;
+  filter: blur(28px) saturate(1.08) brightness(1.03);
+  opacity: 0;
+}
+
+#bg #wallBlur.is-on {
+  opacity: 1;
+}
+
+body[data-wall="00"] #bg #wallA,
+body[data-wall="00"] #bg #wallB {
+  object-fit: contain;
 }
 
 #veil {

@@ -4,6 +4,15 @@
 
 除下文另有说明外，本项目源代码以 MIT 许可发布，全文见 [LICENSE](LICENSE)。
 
+## 第三方代码参考
+
+广告跳过的判断与点击策略参考了下列 MIT 项目；本项目没有复制它们的源文件，只借鉴了公开的做法：
+
+- [zfdang/Android-Touch-Helper](https://github.com/zfdang/Android-Touch-Helper) — MIT License，Copyright (c) zfdang contributors。参考点：`flagIncludeNotImportantViews`、向上找可点击祖先、`performAction` 无效时用 `dispatchGesture` 补点。
+- [madeye/ad-skipper](https://github.com/madeye/ad-skipper) — MIT License，Copyright (c) madeye contributors。参考点：无障碍节点遍历与广告上下文分层判断。
+
+再分发时请保留上述项目的版权与 MIT 许可声明；各项目完整许可见其仓库的 `LICENSE` 文件。
+
 ## 图像与角色素材
 
 - `android/assets/splash-tail.gif`、`android/assets/tail-sprite-blue.png`、`android/assets/tail-sprite-white.png`、`android/res/drawable-nodpi/splash_tail_static.png`、`android/res/mipmap-*/ic_launcher_foreground.png`、`android/assets/w00.jpg` 由项目作者提供的原始图片加工而来，仅用于本项目的个人学习构建。版权归原作者所有，**不在 MIT 许可范围内**。
