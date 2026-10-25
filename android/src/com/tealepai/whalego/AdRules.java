@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  */
 public final class AdRules {
     private static final Pattern COUNTDOWN = Pattern.compile(
-            "^(?:(\\d{1,3})\\s*[|·:：\\-]?\\s*)?"
+            "^(?:(\\d{1,3})\\s*(?:秒|s)?\\s*[|·:：\\-]?\\s*)?"
                     + "(跳过(?:广告)?|skip(?:\\s*ad)?)"
                     + "(?:\\s*[|·:：\\-]?\\s*(\\d{1,3})\\s*(?:秒|s)?)?$");
 

@@ -17,6 +17,7 @@ public final class AdRulesTest {
 
     public static void main(String[] args) {
         check("pdd countdown 35 | 跳过", AdRules.isSkipLabel("35 | 跳过", false), true);
+        check("pdd countdown 35s | 跳过", AdRules.isSkipLabel("35s | 跳过", false), true);
         check("countdown 跳过 5s", AdRules.isSkipLabel("跳过 5s", false), true);
         check("countdown 跳过 5 秒", AdRules.isSkipLabel("跳过 5 秒", false), true);
         check("countdown 5 秒跳过", AdRules.isSkipLabel("5 秒跳过", false), true);
