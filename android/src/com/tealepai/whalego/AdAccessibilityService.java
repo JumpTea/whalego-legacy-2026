@@ -7,6 +7,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import java.util.Locale;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -16,7 +17,9 @@ import java.util.regex.Pattern;
 public class AdAccessibilityService extends AccessibilityService {
     private static final String TAG = "WhaleGo";
     private static final Pattern COUNTDOWN_SKIP =
-            Pattern.compile("^(跳过|skip)\\s*\\d+\\s*(秒|s)?$");
+            Pattern.compile("^(?:(\\d{1,3})\\s*[|·:：\\-]?\\s*)?"
+                    + "(跳过(?:广告)?|skip(?:\\s*ad)?)"
+                    + "(?:\\s*[|·:：\\-]?\\s*(\\d{1,3})\\s*(?:秒|s)?)?$");
     private static volatile boolean running = false;
     private long lastClick = 0L;
 
@@ -94,14 +97,17 @@ public class AdAccessibilityService extends AccessibilityService {
     }
 
     private boolean isActionable(String label, AccessibilityNodeInfo node) {
-        String s = label.trim();
+        String s = label.trim().replaceAll("\\s+", " ");
         if (containsAny(s, "跳过广告", "关闭广告", "skip ad", "close ad")) return true;
-        // 带秒数的“跳过 5s / 跳过5秒”本身就是广告倒计时，不再要求上下文
-        if (COUNTDOWN_SKIP.matcher(s).matches()) return true;
+        // 数字在前/在后、带分隔符的倒计时也算（例如拼多多的「35 | 跳过」）
+        Matcher countdown = COUNTDOWN_SKIP.matcher(s);
+        boolean hasNumber = countdown.matches()
+                && (countdown.group(1) != null || countdown.group(3) != null);
+        if (hasNumber) return true;
         // 单字“跳过 / 关闭 / ×”必须先确认周围有广告语义，避免误点教程与系统弹窗
-        boolean adContext = hasAdContext(node.getParent(), 1);
+        boolean adContext = hasAdContext(node.getParent(), 2);
         if (!adContext) return false;
-        if (containsAny(s, "跳过", "skip")) return true;
+        if (countdown.matches() && containsAny(s, "跳过", "skip")) return true;
         return isCloseLabel(s);
     }
 
@@ -115,7 +121,7 @@ public class AdAccessibilityService extends AccessibilityService {
     private boolean hasAdContext(AccessibilityNodeInfo node, int depth) {
         if (node == null || depth > 6) return false;
         String marker = labelOf(node) + " " + idOf(node);
-        if (containsAny(marker, "广告", "adview", "ad_view", "ad_container", "adslot",
+        if (containsAny(marker, "广告", "推广", "adview", "ad_view", "ad_container", "adslot",
                 "advert", "sponsor", "promo", "reward", "奖励")) {
             return true;
         }
@@ -124,8 +130,9 @@ public class AdAccessibilityService extends AccessibilityService {
 
     private boolean click(AccessibilityNodeInfo node) {
         AccessibilityNodeInfo current = node;
-        for (int i = 0; i < 3 && current != null; i++) {
-            if (current.isClickable() && current.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
+        for (int i = 0; i < 4 && current != null; i++) {
+            if (current.isEnabled() && current.isClickable()
+                    && current.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
                 return true;
             }
             current = current.getParent();

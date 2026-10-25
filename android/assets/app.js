@@ -16,12 +16,19 @@
   const PREF_KEY = 'whalego.prefs';
   const PREVIEW_A11Y_OFF = /[?&]a11y=off(?:&|$)/.test(location.search);
   const MODES = ['default', 'white', 'black', 'system', 'off'];
+  const ASSET_VERSION = '3';
   const FALLBACK_WALL = {
     id: '00',
-    src: 'wallpapers/full/00-default.webp',
-    thumb: 'wallpapers/thumbs/00-default.webp',
+    src: 'w00.jpg',
+    thumb: 't00.jpg',
     source: 'default'
   };
+
+  function assetUrl(path, retry) {
+    if (!path) return '';
+    const sep = path.indexOf('?') >= 0 ? '&' : '?';
+    return path + sep + 'v=' + ASSET_VERSION + (retry ? '&r=' + retry : '');
+  }
 
   const listed = Array.isArray(window.WALLPAPERS) ? window.WALLPAPERS : [];
   const WALLS = listed.length ? listed.slice() : [FALLBACK_WALL];
@@ -131,7 +138,14 @@
     const wp = currentWallpaper();
     wallA.onload = null;
     wallB.onload = null;
-    wallA.src = wp.src;
+    wallA.onerror = () => {
+      noteImageError(wallA.getAttribute('src'));
+      if (wallA.dataset.retried) return;
+      wallA.dataset.retried = '1';
+      wallA.src = assetUrl(wp.src, '1');
+    };
+    wallA.dataset.base = wp.src;
+    wallA.src = assetUrl(wp.src);
     wallA.classList.add('is-on');
     wallB.classList.remove('is-on');
     wallB.removeAttribute('src');
@@ -150,7 +164,7 @@
     if (!animate) {
       outgoing.classList.remove('is-on');
       incoming.classList.remove('is-on');
-      incoming.src = wp.src;
+      incoming.src = assetUrl(wp.src);
       incoming.classList.add('is-on');
       state.slot = activeIsA ? 1 : 0;
       return;
@@ -168,15 +182,23 @@
     incoming.onload = finish;
     incoming.onerror = () => {
       if (token !== wallToken) return;
+      noteImageError(incoming.getAttribute('src'));
+      if (!incoming.dataset.retried) {
+        incoming.dataset.retried = '1';
+        incoming.src = assetUrl(wp.src, '1');
+        return;
+      }
       incoming.classList.remove('is-on');
     };
+    incoming.dataset.retried = '';
 
-    if (incoming.getAttribute('src') === wp.src && incoming.complete && incoming.naturalWidth) {
+    if (incoming.dataset.base === wp.src && incoming.complete && incoming.naturalWidth) {
       requestAnimationFrame(finish);
       return;
     }
+    incoming.dataset.base = wp.src;
     incoming.classList.remove('is-on');
-    incoming.src = wp.src;
+    incoming.src = assetUrl(wp.src);
     if (incoming.complete && incoming.naturalWidth) requestAnimationFrame(finish);
   }
 
@@ -209,7 +231,14 @@
       img.decoding = 'async';
       img.loading = 'lazy';
       img.draggable = false;
-      img.src = wp.thumb || wp.src;
+      const base = wp.thumb || wp.src;
+      img.onerror = () => {
+        noteImageError(img.getAttribute('src'));
+        if (img.dataset.retried) return;
+        img.dataset.retried = '1';
+        img.src = assetUrl(base, '1');
+      };
+      img.src = assetUrl(base);
       cell.appendChild(img);
       frag.appendChild(cell);
     });
@@ -329,7 +358,7 @@
       }
     };
     img.onerror = () => { if (token === paletteToken) clearPalette(); };
-    img.src = wp.src;
+    img.src = assetUrl(wp.src);
   }
 
   /* ---------- page track ---------- */
@@ -511,7 +540,7 @@
       setTimeout(() => {
         if (typeof window.whaleSyncResult === 'function') window.whaleSyncResult(false, 'unsupported');
       }, 120);
-    }, wp.id, target);
+    }, wp.src, target);
   }
 
   /* ---------- splash ---------- */
@@ -688,6 +717,64 @@
     };
   }
 
+  /* ---------- hidden diagnostics (5 taps on the corner note) ---------- */
+
+  function noteImageError(src) {
+    if (!window.__imgErrors) window.__imgErrors = [];
+    if (window.__imgErrors.length < 20 && window.__imgErrors.indexOf(src) < 0) {
+      window.__imgErrors.push(src);
+    }
+  }
+
+  function showDiagnostics() {
+    let box = document.getElementById('diagBox');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'diagBox';
+      box.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(10,13,18,.94);'
+        + 'color:#fff;font:12px/1.55 monospace;padding:18px;overflow:auto;white-space:pre-wrap';
+      document.body.appendChild(box);
+    }
+    const wp = currentWallpaper();
+    const failed = (window.__imgErrors || []).join('\n  ');
+    const lines = [
+      'UA: ' + navigator.userAgent,
+      'URL: ' + location.href,
+      'WALLS: ' + WALLS.length,
+      'current: ' + wp.src + ' / ' + wp.thumb,
+      'wallA: ' + (wallA.getAttribute('src') || '-') + ' complete=' + wallA.complete
+        + ' w=' + wallA.naturalWidth,
+      'wallB: ' + (wallB.getAttribute('src') || '-') + ' complete=' + wallB.complete
+        + ' w=' + wallB.naturalWidth,
+      'grid imgs: ' + document.querySelectorAll('#wallGrid img').length,
+      'failed images:\n  ' + (failed || 'none')
+    ];
+    box.textContent = lines.join('\n') + '\n\nfetch: …';
+    fetch(assetUrl(wp.src)).then((r) => r.arrayBuffer().then((buf) => {
+      box.textContent = lines.join('\n') + '\n\nfetch: ' + r.status + ' '
+        + (r.headers.get('content-type') || '-') + ' ' + buf.byteLength + ' B';
+    })).catch((e) => {
+      box.textContent = lines.join('\n') + '\n\nfetch error: ' + (e && e.message);
+    });
+    box.addEventListener('click', () => box.remove(), { once: true });
+  }
+
+  function installDiagnostics() {
+    const note = document.getElementById('study');
+    if (!note) return;
+    let taps = 0;
+    let timer = 0;
+    note.addEventListener('click', () => {
+      taps++;
+      clearTimeout(timer);
+      timer = setTimeout(() => { taps = 0; }, 1200);
+      if (taps >= 5) {
+        taps = 0;
+        showDiagnostics();
+      }
+    });
+  }
+
   /* ---------- boot ---------- */
 
   function init() {
@@ -698,6 +785,7 @@
     syncModeButtons();
     renderWallGrid();
     bindEvents();
+    installDiagnostics();
     samplePalette();
 
     const inset = callNative('getBottomInset', () => 0);

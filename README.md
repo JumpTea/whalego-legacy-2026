@@ -11,7 +11,7 @@
 
 ## 功能
 
-- **无障碍跳过广告**：识别「跳过 / 跳过广告 / 关闭广告 / skip / close / ×」等按钮文本，350 ms 节流，只点一次。
+- **无障碍跳过广告**：识别「跳过 / 跳过广告 / 关闭广告 / skip / close / ×」以及「35 | 跳过」这类倒计时按钮，350 ms 节流，只点一次。
 - **61 张壁纸**：1 张默认 + 3 个公开图站各 20 张，三列网格选择。
 - **5 种背景**：默认渐变、白色、黑色、跟随系统、关闭。
 - **同步壁纸**：一键设为桌面或锁屏，失败只提示「没换成，再试一次」。
@@ -21,7 +21,7 @@
 
 ## 安装
 
-从 [Releases](https://github.com/JumpTea/whalego/releases/latest) 下载 `whalego-0.2.0.apk`（minSdk 26 / targetSdk 35）。
+从 [Releases](https://github.com/JumpTea/whalego/releases/latest) 下载 `whalego-0.2.1.apk`（minSdk 26 / targetSdk 35）。
 
 1. 安装并打开，按弹窗点「走起」。
 2. 在系统的无障碍设置里启用「鲸驱 · 广告跳过」。

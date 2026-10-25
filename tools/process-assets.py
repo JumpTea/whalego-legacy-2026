@@ -15,8 +15,8 @@ Outputs (committed):
   android/res/mipmap-xxxhdpi/ic_launcher_foreground.png  432px adaptive foreground
   android/res/mipmap-anydpi-v26/ic_launcher*.xml
   android/res/values/colors.xml
-  android/assets/wallpapers/full/00-default.webp
-  android/assets/wallpapers/thumbs/00-default.webp
+  android/assets/w00.jpg
+  android/assets/t00.jpg
 """
 from pathlib import Path
 import os
@@ -41,8 +41,6 @@ ICON_BG = (0xEA, 0xF2, 0xFF, 255)
 def ensure_dirs():
     for p in [
         ASSETS,
-        ASSETS / "wallpapers" / "full",
-        ASSETS / "wallpapers" / "thumbs",
         RES / "drawable-nodpi",
         RES / "mipmap-xxxhdpi",
         RES / "mipmap-anydpi-v26",
@@ -151,10 +149,10 @@ def build_icon():
 def build_default_wallpaper():
     src = Image.open(WALL_SRC).convert("RGB")
     src.thumbnail((1080, 1920), Image.LANCZOS)
-    full = ASSETS / "wallpapers" / "full" / "00-default.webp"
-    src.save(full, "WEBP", quality=85, method=6)
+    full = ASSETS / "w00.jpg"
+    src.save(full, "JPEG", quality=90, optimize=True, progressive=True)
     thumb = ImageOps.fit(src, (360, 480), Image.LANCZOS, centering=(0.5, 0.42))
-    thumb.save(ASSETS / "wallpapers" / "thumbs" / "00-default.webp", "WEBP", quality=78, method=6)
+    thumb.save(ASSETS / "t00.jpg", "JPEG", quality=82, optimize=True, progressive=True)
     print(f"[wallpaper] default {src.size} -> {full.stat().st_size} B + thumb")
 
 
@@ -196,8 +194,8 @@ def write_manifest_fallback():
     manifest = ASSETS / "wallpapers.js"
     if not manifest.exists():
         manifest.write_text(
-            'window.WALLPAPERS = [{"id":"00","src":"wallpapers/full/00-default.webp",'
-            '"thumb":"wallpapers/thumbs/00-default.webp","source":"default"}];\n',
+            'window.WALLPAPERS = [{"id":"00","src":"w00.jpg",'
+            '"thumb":"t00.jpg","source":"default"}];\n',
             encoding="utf-8",
         )
         print("[manifest] wrote default-only fallback wallpapers.js")

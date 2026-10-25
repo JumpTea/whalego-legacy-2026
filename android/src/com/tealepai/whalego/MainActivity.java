@@ -98,7 +98,7 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
         settings.setMediaPlaybackRequiresUserGesture(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
         web.addJavascriptInterface(new Bridge(), "whale");
         web.setWebViewClient(new LocalClient());
@@ -236,8 +236,10 @@ public class MainActivity extends Activity {
     }
 
     private WebResourceResponse notFound() {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Cache-Control", "no-store");
         return new WebResourceResponse("text/plain", "UTF-8", 404, "Not Found",
-                Collections.<String, String>emptyMap(), new ByteArrayInputStream(new byte[0]));
+                headers, new ByteArrayInputStream(new byte[0]));
     }
 
     private class LocalClient extends WebViewClient {
@@ -259,7 +261,7 @@ public class MainActivity extends Activity {
                 String encoding = mime.startsWith("text/")
                         || mime.contains("javascript") || mime.contains("json") ? "UTF-8" : null;
                 Map<String, String> headers = new HashMap<>();
-                headers.put("Cache-Control", "no-cache");
+                headers.put("Cache-Control", "no-store");
                 return new WebResourceResponse(mime, encoding, 200, "OK", headers, in);
             } catch (Exception e) {
                 return notFound();
@@ -364,7 +366,7 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
-        public void setWallpaper(final String id, final int target) {
+        public void setWallpaper(final String asset, final int target) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -372,8 +374,8 @@ public class MainActivity extends Activity {
                     String message = "";
                     InputStream in = null;
                     try {
-                        if (id == null || !id.matches("[A-Za-z0-9_-]{1,64}")) {
-                            throw new IllegalArgumentException("bad id");
+                        if (asset == null || !asset.matches("[A-Za-z0-9_-]{1,64}\\.jpg")) {
+                            throw new IllegalArgumentException("bad asset");
                         }
                         WallpaperManager manager =
                                 WallpaperManager.getInstance(getApplicationContext());
@@ -383,7 +385,7 @@ public class MainActivity extends Activity {
                         if (Build.VERSION.SDK_INT >= 24 && !manager.isSetWallpaperAllowed()) {
                             throw new IllegalStateException("blocked");
                         }
-                        in = getAssets().open("wallpapers/full/" + id + ".webp");
+                        in = getAssets().open(asset);
                         if (Build.VERSION.SDK_INT >= 24) {
                             int which = target == 2
                                     ? WallpaperManager.FLAG_LOCK : WallpaperManager.FLAG_SYSTEM;
